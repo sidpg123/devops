@@ -21,8 +21,8 @@ jobs:
     - name: Build and Push Docker image
       uses: docker/build-push-action@v2
       with:
-        context: .
-        file: ./docker/Dockerfile.user
+        context: ./app
+        file: ./app/Dockerfile
         push: true
         tags: siddharth013/express-ts:1.0  # Replace with your Docker Hub username and repository
 
