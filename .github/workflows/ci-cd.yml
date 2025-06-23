@@ -1,4 +1,4 @@
-name: Build and Deploy to Docker Hub
+name: Build and Deploy to AWS EKS
 
 on:
   push:
@@ -6,25 +6,42 @@ on:
       - master
 
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: siddharth013/express-ts
+
     steps:
-    - name: Check Out Repo
-      uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Set Image Tag from Commit SHA
+        run: echo "IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
 
-    - name: Build and Push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: ./app
-        file: ./app/Dockerfile
-        push: true
-        tags: siddharth013/express-ts:1.0  # Replace with your Docker Hub username and repository
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Verify Pushed Image
-      run: docker pull siddharth013/express-ts:1.0  # Replace with your Docker Hub username and repository
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          file: ./app/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Update kubeconfig for EKS
+        run: aws eks update-kubeconfig --region ap-south-1 --name devops-cluster
+
+      - name: Update K8s Deployment with New Image
+        run: |
+          kubectl set image deployment/express-ts express-ts=${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
