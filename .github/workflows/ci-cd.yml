@@ -45,3 +45,7 @@ jobs:
       - name: Update K8s Deployment with New Image
         run: |
           kubectl set image deployment/express-ts express-ts=${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+          kubectl rolllout restart deployment/express-ts
+
+          kubectl rollout status deployment/express-ts

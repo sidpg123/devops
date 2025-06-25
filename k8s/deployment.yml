@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: express-ts
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: express-ts
+  template:
+    metadata:
+      labels:
+        app: express-ts
+    spec:
+      containers:
+      - name: express-ts
+        image: siddharth013/express-ts:initial
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3000
