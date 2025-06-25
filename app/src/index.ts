@@ -6,7 +6,7 @@ const port = 3000;
 app.use(express.json());
 
 app.get('/', (req: Request, res: Response) => {
-    res.send('Will this work?');
+    res.send('Will this work after update?');
 });
 
 app.get('/about', (req: Request, res: Response) => {
